@@ -412,7 +412,7 @@ mi árbol pequeño.
             document.getElementById('next-btn').addEventListener('click', saveAndProceed);
         }
 
-        // ── GUARDAR Y ENVIAR ──────────────────────────────────────────────────────
+        // ── GUARDAR Y AVANZAR ─────────────────────────────────────────────────────
         function saveAndProceed() {
             const input = document.getElementById('answer-input');
             const raw = input.value.trim();
@@ -425,7 +425,7 @@ mi árbol pequeño.
             const step = experimentSteps[currentStepIndex];
             const timeElapsed = ((performance.now() - questionStartTime) / 1000).toFixed(2);
 
-            const resultado = {
+            results.push({
                 grupo: participantGroup,
                 estimulo: step.stimulusLabel,
                 pregunta: step.text,
@@ -433,30 +433,14 @@ mi árbol pequeño.
                 respuesta_correcta: step.answer,
                 es_correcta: userAnswer === step.answer,
                 tiempo_segundos: timeElapsed
-            };
-
-            results.push(resultado);
-
-            // Envío a Google Sheets
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    sessionId: sessionId,
-                    grupo: participantGroup,
-                    respuesta_usuario: userAnswer
-                })
-            }).catch(err => console.error('Error enviando datos:', err));
+            });
 
             currentStepIndex++;
             renderCurrentStep();
         }
 
         // ── RESUMEN FINAL ─────────────────────────────────────────────────────────
-        function renderSummary() {
+        async function renderSummary() {
             const total = results.length;
             const correctas = results.filter(r => r.es_correcta).length;
 
@@ -491,7 +475,47 @@ mi árbol pequeño.
                 <button onclick="downloadCSV()">⬇ Descargar CSV</button>
                 <button class="btn-secondary" onclick="downloadTXT()">⬇ Descargar TXT</button>
             </div>
+            <p id="send-status" style="margin-top:16px;font-size:0.9rem;color:#666;">Guardando respuestas…</p>
         `;
+
+            // ── ENVÍO ÚNICO A GOOGLE SHEETS ───────────────────────────────────────
+            const payload = {
+                sessionId,
+                grupo: participantGroup,
+                respuestas: results.map(r => r.respuesta_usuario),
+                tiempos: results.map(r => Number(r.tiempo_segundos))
+            };
+            console.log('Enviando a Apps Script:', payload);
+
+            try {
+                if (results.length !== 7) {
+                    throw new Error('La prueba no contiene las 7 respuestas esperadas.');
+                }
+
+                const res = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const txt = await res.text();
+                console.log('Respuesta de Apps Script:', txt);
+
+                if (txt.trim() !== 'OK') {
+                    throw new Error(txt);
+                }
+
+                document.getElementById('send-status').textContent =
+                    '✓ Tus respuestas han sido registradas correctamente.';
+                document.getElementById('send-status').style.color = '#2e7d32';
+            } catch (err) {
+                console.error('Error enviando datos:', err);
+                document.getElementById('send-status').textContent =
+                    'No fue posible guardar tus respuestas. Intenta nuevamente.';
+                document.getElementById('send-status').style.color = '#c62828';
+            }
         }
 
         // ── DESCARGAS ─────────────────────────────────────────────────────────────
