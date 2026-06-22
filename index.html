@@ -222,7 +222,7 @@
     <script>
         // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────
         // Pega aquí la URL de tu Google Apps Script (entre las comillas)
-        const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/unal.edu.co/s/AKfycbzANGL33d0yjoKAsbvuJWrMqQEcgHR6-qOtwvb-PZy45ijlk_ovPV90mDZRp7XhOZM/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz85L4-qcf7n01Lci46RR3XONB_gfZOIatcMphttCPKcp0JnSFlnyBXf63XHheSBNh4/exec';
 
         // ── CONTENIDO ─────────────────────────────────────────────────────────────
         const poem1 = `AMÉRICA
@@ -437,7 +437,7 @@ mi árbol pequeño.
 
             results.push(resultado);
 
-            // Envío a Google Sheets vía Apps Script
+            // Envío a Google Sheets
             fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -447,7 +447,6 @@ mi árbol pequeño.
                 body: JSON.stringify({
                     sessionId: sessionId,
                     grupo: participantGroup,
-                    pregunta_index: currentStepIndex,
                     respuesta_usuario: userAnswer
                 })
             }).catch(err => console.error('Error enviando datos:', err));
