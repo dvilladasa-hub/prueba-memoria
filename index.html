@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Memoria</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #333;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+        
+        #app-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        #timer-bar-wrap {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        #timer-bar {
+            height: 100%;
+            background: #0071e3;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        
+        .stimulus-text {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            text-align: left;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+        
+        .stimulus-image {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        
+        input[type="number"] {
+            font-size: 1.5rem;
+            padding: 12px;
+            width: 150px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #0071e3;
+        }
+        
+        select {
+            font-size: 1rem;
+            padding: 10px 14px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 12px;
+            background: #fff;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            border-color: #0071e3;
+        }
+        
+        button {
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #005bb5;
+        }
+        
+        .label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+        }
+        
+        .correct {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        
+        .incorrect {
+            color: #c62828;
+            font-weight: bold;
+        }
+        
+        .meta-info {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 8px;
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: #e8f0fe;
+            color: #1a56db;
+            font-weight: 500;
+            margin-bottom: 14px;
+        }
+        
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        
+        .btn-secondary {
+            background-color: #fff;
+            color: #0071e3;
+            border: 2px solid #0071e3;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 0;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e8f0fe;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+        <h2>Bienvenido/a a la Prueba de Memoria</h2>
+        <p>Presta mucha atención a los textos e imágenes que aparecerán a continuación. Cada uno se mostrará por un tiempo limitado.</p>
+        <p>Una vez iniciada la prueba, <strong>no podrás volver atrás</strong>.</p>
+        <br>
+        <label class="label">Grupo de edad</label>
+        <select id="group-select">
+        <option value="">Selecciona tu grupo...</option>
+        <option value="G0_ninez">Niñez (0–11 años)</option>
+        <option value="G1_adolescencia">Adolescencia (12–17 años)</option>
+        <option value="G2_juventud">Juventud (18–28 años)</option>
+        <option value="G3_adulto">Adulto (29–59 años)</option>
+        <option value="G4_adulto_mayor">Adulto mayor (60 años o más)</option>
+    </select>
+        <br>
+        <button onclick="startExperiment()">Iniciar prueba</button>
+        <p class="meta-info">Grupos según clasificación del DANE</p>
+    </div>
+
+    <script>
+        // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────
+        // Pega aquí la URL de tu Google Apps Script (entre las comillas)
+        const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/unal.edu.co/s/AKfycbzANGL33d0yjoKAsbvuJWrMqQEcgHR6-qOtwvb-PZy45ijlk_ovPV90mDZRp7XhOZM/exec';
+
+        // ── CONTENIDO ─────────────────────────────────────────────────────────────
+        const poem1 = `AMÉRICA
+
+AMÉRICA,
+no invoco tu nombre en vano.
+Cuando sujeto al corazón la espada,
+cuando aguanto en el alma la gotera,
+cuando por las ventanas
+un nuevo día tuyo me penetra,
+soy y estoy en la luz que me produce,
+vivo en la sombra que me determina,
+duermo y despierto en tu esencial aurora:
+dulce como las uvas, y terrible,
+conductor del azúcar y el castigo,
+empapado en esperma de tu especie,
+amamantado en sangre de tu herencia.
+
+— Pablo Neruda`;
+
+        const poem2 = `Mi árbol pequeño
+
+Mi árbol tenía
+sus ramas de oro.
+Un viento envidioso
+robó mi tesoro.
+Hoy no tiene ramas
+Hoy no tiene sueños
+mi árbol callado
+mi árbol pequeño.
+
+— Antonio García Teijeiro`;
+
+        const experimentSteps = [{
+                type: 'stimulus',
+                format: 'text',
+                content: poem1,
+                duration: 15000,
+                label: 'Texto 1 de 2'
+            }, {
+                type: 'question',
+                text: '¿Cuántas veces aparece la palabra "cuando" en el texto que acabas de leer?',
+                answer: 3,
+                stimulusLabel: 'Poema Neruda'
+            },
+
+            {
+                type: 'stimulus',
+                format: 'text',
+                content: poem2,
+                duration: 15000,
+                label: 'Texto 2 de 2'
+            }, {
+                type: 'question',
+                text: '¿Cuántas veces aparece la palabra "árbol" en el texto que acabas de leer?',
+                answer: 3,
+                stimulusLabel: 'Poema García Teijeiro'
+            },
+
+            {
+                type: 'stimulus',
+                format: 'image',
+                content: 'imagen1.jpg',
+                duration: 10000,
+                label: 'Imagen 1 de 2'
+            }, {
+                type: 'question',
+                text: '¿Cuántos cuadrados hay en la imagen que acabas de ver?',
+                answer: 5,
+                stimulusLabel: 'Imagen 1'
+            }, {
+                type: 'question',
+                text: '¿Cuántos círculos hay en la imagen que acabas de ver?',
+                answer: 3,
+                stimulusLabel: 'Imagen 1'
+            }, {
+                type: 'question',
+                text: '¿Cuántos cuadriláteros hay en total en la imagen que acabas de ver?',
+                answer: 9,
+                stimulusLabel: 'Imagen 1'
+            },
+
+            {
+                type: 'stimulus',
+                format: 'image',
+                content: 'imagen2.jpg',
+                duration: 10000,
+                label: 'Imagen 2 de 2'
+            }, {
+                type: 'question',
+                text: '¿Cuántas figuras de color verde hay en la imagen que acabas de ver?',
+                answer: 5,
+                stimulusLabel: 'Imagen 2'
+            }, {
+                type: 'question',
+                text: '¿Cuántas figuras de color rosado hay en la imagen que acabas de ver?',
+                answer: 2,
+                stimulusLabel: 'Imagen 2'
+            },
+        ];
+
+        // ── ESTADO ────────────────────────────────────────────────────────────────
+        const sessionId = Date.now() + Math.floor(Math.random() * 1000);
+        let currentStepIndex = 0;
+        let questionStartTime = 0;
+        let timerInterval = null;
+        const results = [];
+        let participantGroup = '';
+        const container = document.getElementById('app-container');
+
+        // ── BLOQUEO NAVEGACIÓN ────────────────────────────────────────────────────
+        function lockBackButton() {
+            history.pushState(null, '', location.href);
+            window.onpopstate = function() {
+                history.pushState(null, '', location.href);
+            };
+        }
+
+        // ── INICIO ────────────────────────────────────────────────────────────────
+        function startExperiment() {
+            const groupVal = document.getElementById('group-select').value;
+            if (!groupVal) {
+                alert('Por favor selecciona el grupo de edad antes de iniciar.');
+                return;
+            }
+            participantGroup = groupVal;
+            lockBackButton();
+            currentStepIndex = 0;
+            renderCurrentStep();
+        }
+
+        // ── RENDER ────────────────────────────────────────────────────────────────
+        function renderCurrentStep() {
+            clearInterval(timerInterval);
+            container.innerHTML = '';
+            if (currentStepIndex >= experimentSteps.length) {
+                renderSummary();
+                return;
+            }
+            const step = experimentSteps[currentStepIndex];
+            if (step.type === 'stimulus') renderStimulus(step);
+            else renderQuestion(step);
+        }
+
+        // ── ESTÍMULO ──────────────────────────────────────────────────────────────
+        function renderStimulus(step) {
+            const totalMs = step.duration;
+            let elapsed = 0;
+            const badge = `<div class="phase-badge">${step.label}</div>`;
+            const timerHtml = `<div id="timer-bar-wrap"><div id="timer-bar"></div></div>`;
+
+            if (step.format === 'text') {
+                container.innerHTML = badge + timerHtml + `<div class="stimulus-text">${step.content}</div>`;
+            } else {
+                container.innerHTML = badge + timerHtml +
+                    `<img src="${step.content}" alt="Estímulo visual" class="stimulus-image"
+                     onerror="this.outerHTML='<p style=color:#c62828>⚠ No se encontró <strong>${step.content}</strong>. Ponla en la misma carpeta que el HTML.</p>'">`;
+            }
+
+            timerInterval = setInterval(() => {
+                elapsed += 100;
+                const pct = Math.max(0, 100 - (elapsed / totalMs * 100));
+                const bar = document.getElementById('timer-bar');
+                if (bar) bar.style.width = pct + '%';
+                if (elapsed >= totalMs) {
+                    clearInterval(timerInterval);
+                    currentStepIndex++;
+                    renderCurrentStep();
+                }
+            }, 100);
+        }
+
+        // ── PREGUNTA ──────────────────────────────────────────────────────────────
+        function renderQuestion(step) {
+            questionStartTime = performance.now();
+            container.innerHTML = `
+            <div class="question-text">${step.text}</div>
+            <input type="number" id="answer-input" min="0" max="99" autocomplete="off" placeholder="0">
+            <br>
+            <button id="next-btn">Siguiente →</button>
+        `;
+            const input = document.getElementById('answer-input');
+            setTimeout(() => input.focus(), 50);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') saveAndProceed();
+            });
+            document.getElementById('next-btn').addEventListener('click', saveAndProceed);
+        }
+
+        // ── GUARDAR Y ENVIAR ──────────────────────────────────────────────────────
+        function saveAndProceed() {
+            const input = document.getElementById('answer-input');
+            const raw = input.value.trim();
+            if (raw === '') {
+                alert('Por favor ingresa un número antes de continuar.');
+                return;
+            }
+
+            const userAnswer = parseInt(raw, 10);
+            const step = experimentSteps[currentStepIndex];
+            const timeElapsed = ((performance.now() - questionStartTime) / 1000).toFixed(2);
+
+            const resultado = {
+                grupo: participantGroup,
+                estimulo: step.stimulusLabel,
+                pregunta: step.text,
+                respuesta_usuario: userAnswer,
+                respuesta_correcta: step.answer,
+                es_correcta: userAnswer === step.answer,
+                tiempo_segundos: timeElapsed
+            };
+
+            results.push(resultado);
+
+            // Envío a Google Sheets vía Apps Script
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    grupo: participantGroup,
+                    pregunta_index: currentStepIndex,
+                    respuesta_usuario: userAnswer
+                })
+            }).catch(err => console.error('Error enviando datos:', err));
+
+            currentStepIndex++;
+            renderCurrentStep();
+        }
+
+        // ── RESUMEN FINAL ─────────────────────────────────────────────────────────
+        function renderSummary() {
+            const total = results.length;
+            const correctas = results.filter(r => r.es_correcta).length;
+
+            const rows = results.map(r => {
+                const cls = r.es_correcta ? 'correct' : 'incorrect';
+                const txt = r.es_correcta ? 'Sí ✓' : 'No ✗';
+                const q = r.pregunta.length > 60 ? r.pregunta.slice(0, 57) + '…' : r.pregunta;
+                return `<tr>
+                <td style="text-align:left">${q}</td>
+                <td>${r.respuesta_usuario}</td>
+                <td class="${cls}">${txt}</td>
+                <td>${r.tiempo_segundos}</td>
+            </tr>`;
+            }).join('');
+
+            container.innerHTML = `
+            <h2>Prueba finalizada</h2>
+            <p>Gracias por tu participación.</p>
+            <p><strong>${correctas} de ${total}</strong> respuestas correctas.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align:left">Pregunta</th>
+                        <th>Tu respuesta</th>
+                        <th>¿Correcta?</th>
+                        <th>Tiempo (s)</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="btn-row">
+                <button onclick="downloadCSV()">⬇ Descargar CSV</button>
+                <button class="btn-secondary" onclick="downloadTXT()">⬇ Descargar TXT</button>
+            </div>
+        `;
+        }
+
+        // ── DESCARGAS ─────────────────────────────────────────────────────────────
+        function getFilename(ext) {
+            const date = new Date().toISOString().slice(0, 10);
+            const g = participantGroup.replace('_', '-');
+            return `memoria_${g}_${date}.${ext}`;
+        }
+
+        function downloadCSV() {
+            const BOM = '\uFEFF';
+            const headers = ['grupo_dane', 'estimulo', 'pregunta', 'respuesta_usuario', 'respuesta_correcta', 'es_correcta', 'tiempo_segundos'];
+            const rows = results.map(r => [
+                r.grupo,
+                `"${r.estimulo}"`,
+                `"${r.pregunta.replace(/"/g, '""')}"`,
+                r.respuesta_usuario,
+                r.respuesta_correcta,
+                r.es_correcta ? 'TRUE' : 'FALSE',
+                r.tiempo_segundos
+            ].join(','));
+            const csv = BOM + headers.join(',') + '\n' + rows.join('\n');
+            triggerDownload(csv, 'text/csv;charset=utf-8;', getFilename('csv'));
+        }
+
+        function downloadTXT() {
+            const date = new Date().toLocaleString('es-CO');
+            let txt = `RESULTADOS - PRUEBA DE MEMORIA\n`;
+            txt += `Fecha: ${date}\n`;
+            txt += `Grupo: ${participantGroup}\n`;
+            txt += `${'─'.repeat(60)}\n\n`;
+            results.forEach((r, i) => {
+                txt += `Pregunta ${i + 1}: ${r.pregunta}\n`;
+                txt += `  Estímulo:           ${r.estimulo}\n`;
+                txt += `  Respuesta dada:     ${r.respuesta_usuario}\n`;
+                txt += `  Respuesta correcta: ${r.respuesta_correcta}\n`;
+                txt += `  ¿Correcta?:         ${r.es_correcta ? 'Sí' : 'No'}\n`;
+                txt += `  Tiempo (s):         ${r.tiempo_segundos}\n\n`;
+            });
+            const correctas = results.filter(r => r.es_correcta).length;
+            txt += `${'─'.repeat(60)}\n`;
+            txt += `TOTAL CORRECTAS: ${correctas} de ${results.length}\n`;
+            triggerDownload(txt, 'text/plain;charset=utf-8;', getFilename('txt'));
+        }
+
+        function triggerDownload(content, mime, filename) {
+            const BOM = mime.includes('csv') ? '' : '\uFEFF';
+            const blob = new Blob([BOM + content], {
+                type: mime
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>
