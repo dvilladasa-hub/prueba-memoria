@@ -172,30 +172,6 @@
             font-weight: 500;
             margin-bottom: 14px;
         }
-        
-        .btn-row {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 24px;
-        }
-        
-        .btn-secondary {
-            background-color: #fff;
-            color: #0071e3;
-            border: 2px solid #0071e3;
-            padding: 12px 24px;
-            font-size: 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 0;
-            transition: background-color 0.2s;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #e8f0fe;
-        }
     </style>
 </head>
 
@@ -225,9 +201,7 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz85L4-qcf7n01Lci46RR3XONB_gfZOIatcMphttCPKcp0JnSFlnyBXf63XHheSBNh4/exec';
 
         // ── CONTENIDO ─────────────────────────────────────────────────────────────
-        const poem1 = `AMÉRICA
-
-AMÉRICA,
+        const poem1 = `AMÉRICA,
 no invoco tu nombre en vano.
 Cuando sujeto al corazón la espada,
 cuando aguanto en el alma la gotera,
@@ -243,9 +217,7 @@ amamantado en sangre de tu herencia.
 
 — Pablo Neruda`;
 
-        const poem2 = `Mi árbol pequeño
-
-Mi árbol tenía
+        const poem2 = `Mi árbol tenía
 sus ramas de oro.
 Un viento envidioso
 robó mi tesoro.
@@ -314,7 +286,7 @@ mi árbol pequeño.
             }, {
                 type: 'question',
                 text: '¿Cuántas figuras de color verde hay en la imagen que acabas de ver?',
-                answer: 5,
+                answer: 4,
                 stimulusLabel: 'Imagen 2'
             }, {
                 type: 'question',
@@ -471,10 +443,6 @@ mi árbol pequeño.
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
-            <div class="btn-row">
-                <button onclick="downloadCSV()">⬇ Descargar CSV</button>
-                <button class="btn-secondary" onclick="downloadTXT()">⬇ Descargar TXT</button>
-            </div>
             <p id="send-status" style="margin-top:16px;font-size:0.9rem;color:#666;">Guardando respuestas…</p>
         `;
 
@@ -492,20 +460,12 @@ mi árbol pequeño.
                     throw new Error('La prueba no contiene las 7 respuestas esperadas.');
                 }
 
-                const res = await fetch(APPS_SCRIPT_URL, {
+                await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-                const txt = await res.text();
-                console.log('Respuesta de Apps Script:', txt);
-
-                if (txt.trim() !== 'OK') {
-                    throw new Error(txt);
-                }
+                console.log('Petición enviada (no-cors, respuesta opaca)');
 
                 document.getElementById('send-status').textContent =
                     '✓ Tus respuestas han sido registradas correctamente.';
@@ -516,64 +476,6 @@ mi árbol pequeño.
                     'No fue posible guardar tus respuestas. Intenta nuevamente.';
                 document.getElementById('send-status').style.color = '#c62828';
             }
-        }
-
-        // ── DESCARGAS ─────────────────────────────────────────────────────────────
-        function getFilename(ext) {
-            const date = new Date().toISOString().slice(0, 10);
-            const g = participantGroup.replace('_', '-');
-            return `memoria_${g}_${date}.${ext}`;
-        }
-
-        function downloadCSV() {
-            const BOM = '\uFEFF';
-            const headers = ['grupo_dane', 'estimulo', 'pregunta', 'respuesta_usuario', 'respuesta_correcta', 'es_correcta', 'tiempo_segundos'];
-            const rows = results.map(r => [
-                r.grupo,
-                `"${r.estimulo}"`,
-                `"${r.pregunta.replace(/"/g, '""')}"`,
-                r.respuesta_usuario,
-                r.respuesta_correcta,
-                r.es_correcta ? 'TRUE' : 'FALSE',
-                r.tiempo_segundos
-            ].join(','));
-            const csv = BOM + headers.join(',') + '\n' + rows.join('\n');
-            triggerDownload(csv, 'text/csv;charset=utf-8;', getFilename('csv'));
-        }
-
-        function downloadTXT() {
-            const date = new Date().toLocaleString('es-CO');
-            let txt = `RESULTADOS - PRUEBA DE MEMORIA\n`;
-            txt += `Fecha: ${date}\n`;
-            txt += `Grupo: ${participantGroup}\n`;
-            txt += `${'─'.repeat(60)}\n\n`;
-            results.forEach((r, i) => {
-                txt += `Pregunta ${i + 1}: ${r.pregunta}\n`;
-                txt += `  Estímulo:           ${r.estimulo}\n`;
-                txt += `  Respuesta dada:     ${r.respuesta_usuario}\n`;
-                txt += `  Respuesta correcta: ${r.respuesta_correcta}\n`;
-                txt += `  ¿Correcta?:         ${r.es_correcta ? 'Sí' : 'No'}\n`;
-                txt += `  Tiempo (s):         ${r.tiempo_segundos}\n\n`;
-            });
-            const correctas = results.filter(r => r.es_correcta).length;
-            txt += `${'─'.repeat(60)}\n`;
-            txt += `TOTAL CORRECTAS: ${correctas} de ${results.length}\n`;
-            triggerDownload(txt, 'text/plain;charset=utf-8;', getFilename('txt'));
-        }
-
-        function triggerDownload(content, mime, filename) {
-            const BOM = mime.includes('csv') ? '' : '\uFEFF';
-            const blob = new Blob([BOM + content], {
-                type: mime
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>
