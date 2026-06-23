@@ -245,21 +245,21 @@
 
         // Exactamente 4 preguntas de selección múltiple
         const questions = [{
-            text: '¿Cuántas figuras de color verde hay en la imagen?',
-            options: ['7', '8', '9', '10'],
-            answer: '8'
+            text: '¿Cuántos rectángulos morados hay en la imagen?',
+            options: ['0', '1', '2', '3'],
+            answer: '1'
         }, {
             text: '¿Cuántos cuadrados hay en la imagen?',
-            options: ['6', '7', '8', '9'],
-            answer: '7'
-        }, {
-            text: '¿Cuántos círculos hay en la imagen?',
             options: ['4', '5', '6', '7'],
             answer: '5'
         }, {
-            text: '¿Cuántos triángulos hay en la imagen?',
-            options: ['7', '8', '9', '10'],
-            answer: '8'
+            text: '¿Cuántos círculos hay en la imagen?',
+            options: ['5', '6', '7', '8'],
+            answer: '6'
+        }, {
+            text: '¿Cuántos rombos hay en la imagen?',
+            options: ['0', '1', '2', '3'],
+            answer: '0'
         }];
         // Verificación: debe ser 4
 
@@ -408,9 +408,14 @@
             </tr>`;
             }).join('');
 
+            var tiempoTotal = results.reduce((a, r) => a + Number(r.tiempo_segundos), 0).toFixed(2);
+            var grupoLabel = document.querySelector('#group-select option:checked').text;
+            var generoLabel = participantGender;
+
             container.innerHTML =
                 `<h2>Prueba finalizada</h2>
              <p>Gracias por tu participación.</p>
+             <p><strong>Grupo:</strong> ${grupoLabel} &nbsp;|&nbsp; <strong>Género:</strong> ${generoLabel}</p>
              <p><strong>${correctas} de ${results.length}</strong> respuestas correctas.</p>
              <table>
                  <thead>
@@ -423,6 +428,9 @@
                  </thead>
                  <tbody>${rows}</tbody>
              </table>
+            <p style="margin-top:16px; color:#555;">
+                <strong>Tiempo total:</strong> ${tiempoTotal} segundos
+            </p>
 `;
 
             // Envío único a Google Sheets con todos los datos al finalizar
@@ -438,12 +446,17 @@
             fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=UTF-8'
-                    },
                     body: JSON.stringify(payload)
                 })
-                .then(() => console.log('Petición enviada'))
+                .then(() => {
+                    console.log('Petición enviada');
+                    var p = document.createElement('p');
+                    p.style.color = '#2e7d32';
+                    p.style.fontWeight = 'bold';
+                    p.style.marginTop = '20px';
+                    p.textContent = '✓ Respuestas registradas correctamente.';
+                    container.appendChild(p);
+                })
                 .catch(err => console.error('Error enviando datos:', err));
         }
     </script>
