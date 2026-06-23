@@ -44,16 +44,6 @@
             transition: width 0.1s linear;
         }
         
-        .stimulus-text {
-            font-size: 1.15rem;
-            line-height: 1.8;
-            text-align: left;
-            white-space: pre-wrap;
-            margin-bottom: 20px;
-            max-height: 65vh;
-            overflow-y: auto;
-        }
-        
         .stimulus-image {
             max-width: 100%;
             max-height: 60vh;
@@ -62,28 +52,67 @@
         }
         
         .question-text {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 500;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
             line-height: 1.4;
         }
         
-        input[type="number"] {
-            font-size: 1.5rem;
-            padding: 12px;
-            width: 150px;
-            text-align: center;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s;
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            max-width: 420px;
+            margin: 0 auto 24px;
         }
         
-        input[type="number"]:focus {
+        .option-btn {
+            background: #f5f5f7;
+            color: #333;
+            border: 2px solid #ddd;
+            padding: 18px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            margin-top: 0;
+        }
+        
+        .option-btn:hover {
             border-color: #0071e3;
+            background: #e8f0fe;
         }
         
-        select {
+        .option-btn.selected {
+            border-color: #0071e3;
+            background: #e8f0fe;
+        }
+        
+        button.confirm-btn {
+            background-color: #0071e3;
+            color: white;
+            border: none;
+            padding: 13px 32px;
+            font-size: 1.05rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        button.confirm-btn:hover {
+            background-color: #005bb5;
+        }
+        
+        button.confirm-btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        
+        select,
+        input[type="number"],
+        input[type="text"] {
             font-size: 1rem;
             padding: 10px 14px;
             border: 2px solid #ccc;
@@ -93,27 +122,11 @@
             max-width: 400px;
             margin-bottom: 12px;
             background: #fff;
-            cursor: pointer;
         }
         
-        select:focus {
+        select:focus,
+        input:focus {
             border-color: #0071e3;
-        }
-        
-        button {
-            background-color: #0071e3;
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            font-size: 1.1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.2s;
-        }
-        
-        button:hover {
-            background-color: #005bb5;
         }
         
         .label {
@@ -125,6 +138,21 @@
             max-width: 400px;
             margin-left: auto;
             margin-right: auto;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+        
+        .radio-group label {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
         }
         
         table {
@@ -172,15 +200,20 @@
             font-weight: 500;
             margin-bottom: 14px;
         }
+        
+        button {
+            font-family: inherit;
+        }
     </style>
 </head>
 
 <body>
     <div id="app-container">
         <h2>Bienvenido/a a la Prueba de Memoria</h2>
-        <p>Presta mucha atención a los textos e imágenes que aparecerán a continuación. Cada uno se mostrará por un tiempo limitado.</p>
+        <p>Se mostrará una imagen por un tiempo limitado. Luego responderás 4 preguntas sobre lo que viste.</p>
         <p>Una vez iniciada la prueba, <strong>no podrás volver atrás</strong>.</p>
         <br>
+
         <label class="label">Grupo de edad</label>
         <select id="group-select">
         <option value="">Selecciona tu grupo...</option>
@@ -190,119 +223,59 @@
         <option value="G3_adulto">Adulto (29–59 años)</option>
         <option value="G4_adulto_mayor">Adulto mayor (60 años o más)</option>
     </select>
-        <br>
-        <button onclick="startExperiment()">Iniciar prueba</button>
+
+        <label class="label">Género</label>
+        <div class="radio-group">
+            <label><input type="radio" name="gender" value="Hombre"> Hombre</label>
+            <label><input type="radio" name="gender" value="Mujer"> Mujer</label>
+        </div>
+
+        <button class="confirm-btn" onclick="startExperiment()">Iniciar prueba</button>
         <p class="meta-info">Grupos según clasificación del DANE</p>
     </div>
 
     <script>
         // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────
-        // Pega aquí la URL de tu Google Apps Script (entre las comillas)
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz85L4-qcf7n01Lci46RR3XONB_gfZOIatcMphttCPKcp0JnSFlnyBXf63XHheSBNh4/exec';
 
-        // ── CONTENIDO ─────────────────────────────────────────────────────────────
-        const poem1 = `AMÉRICA,
-no invoco tu nombre en vano.
-Cuando sujeto al corazón la espada,
-cuando aguanto en el alma la gotera,
-cuando por las ventanas
-un nuevo día tuyo me penetra,
-soy y estoy en la luz que me produce,
-vivo en la sombra que me determina,
-duermo y despierto en tu esencial aurora:
-dulce como las uvas, y terrible,
-conductor del azúcar y el castigo,
-empapado en esperma de tu especie,
-amamantado en sangre de tu herencia.
+        // ── ESTÍMULO Y PREGUNTAS ──────────────────────────────────────────────────
+        // La imagen debe llamarse imagen1.jpg y estar en la misma carpeta que este archivo.
+        const STIMULUS_IMAGE = 'imagen1.jpg';
+        const STIMULUS_DURATION = 15000; // 15 segundos
 
-— Pablo Neruda`;
-
-        const poem2 = `Mi árbol tenía
-sus ramas de oro.
-Un viento envidioso
-robó mi tesoro.
-Hoy no tiene ramas
-Hoy no tiene sueños
-mi árbol callado
-mi árbol pequeño.
-
-— Antonio García Teijeiro`;
-
-        const experimentSteps = [{
-                type: 'stimulus',
-                format: 'text',
-                content: poem1,
-                duration: 15000,
-                label: 'Texto 1 de 2'
-            }, {
-                type: 'question',
-                text: '¿Cuántas veces aparece la palabra "cuando" en el texto que acabas de leer?',
-                answer: 3,
-                stimulusLabel: 'Poema Neruda'
-            },
-
-            {
-                type: 'stimulus',
-                format: 'text',
-                content: poem2,
-                duration: 15000,
-                label: 'Texto 2 de 2'
-            }, {
-                type: 'question',
-                text: '¿Cuántas veces aparece la palabra "árbol" en el texto que acabas de leer?',
-                answer: 3,
-                stimulusLabel: 'Poema García Teijeiro'
-            },
-
-            {
-                type: 'stimulus',
-                format: 'image',
-                content: 'imagen1.jpg',
-                duration: 10000,
-                label: 'Imagen 1 de 2'
-            }, {
-                type: 'question',
-                text: '¿Cuántos cuadrados hay en la imagen que acabas de ver?',
-                answer: 5,
-                stimulusLabel: 'Imagen 1'
-            }, {
-                type: 'question',
-                text: '¿Cuántos círculos hay en la imagen que acabas de ver?',
-                answer: 3,
-                stimulusLabel: 'Imagen 1'
-            }, {
-                type: 'question',
-                text: '¿Cuántos cuadriláteros hay en total en la imagen que acabas de ver?',
-                answer: 9,
-                stimulusLabel: 'Imagen 1'
-            },
-
-            {
-                type: 'stimulus',
-                format: 'image',
-                content: 'imagen2.jpg',
-                duration: 10000,
-                label: 'Imagen 2 de 2'
-            }, {
-                type: 'question',
-                text: '¿Cuántas figuras de color verde hay en la imagen que acabas de ver?',
-                answer: 4,
-                stimulusLabel: 'Imagen 2'
-            }, {
-                type: 'question',
-                text: '¿Cuántas figuras de color rosado hay en la imagen que acabas de ver?',
-                answer: 2,
-                stimulusLabel: 'Imagen 2'
-            },
-        ];
+        // Exactamente 4 preguntas de selección múltiple
+        const questions = [{
+            text: '¿Cuántas figuras de color verde hay en la imagen?',
+            options: ['7', '8', '9', '10'],
+            answer: '8'
+        }, {
+            text: '¿Cuántos cuadrados hay en la imagen?',
+            options: ['6', '7', '8', '9'],
+            answer: '7'
+        }, {
+            text: '¿Cuántos círculos hay en la imagen?',
+            options: ['4', '5', '6', '7'],
+            answer: '5'
+        }, {
+            text: '¿Cuántos triángulos hay en la imagen?',
+            options: ['7', '8', '9', '10'],
+            answer: '8'
+        }];
+        // Verificación: debe ser 4
 
         // ── ESTADO ────────────────────────────────────────────────────────────────
-        const sessionId = Date.now() + Math.floor(Math.random() * 1000);
-        let currentStepIndex = 0;
-        let questionStartTime = 0;
-        let timerInterval = null;
-        const results = [];
-        let participantGroup = '';
+        var questionIndex = 0;
+        var questionStartTime = 0;
+        var timerInterval = null;
+        var selectedOption = null;
+
+        // Datos del participante
+        var participantGroup = '';
+        var participantGender = '';
+
+        // Acumuladores de resultados (longitud final: 4)
+        var results = [];
+
         const container = document.getElementById('app-container');
 
         // ── BLOQUEO NAVEGACIÓN ────────────────────────────────────────────────────
@@ -316,43 +289,34 @@ mi árbol pequeño.
         // ── INICIO ────────────────────────────────────────────────────────────────
         function startExperiment() {
             const groupVal = document.getElementById('group-select').value;
-            if (!groupVal) {
-                alert('Por favor selecciona el grupo de edad antes de iniciar.');
-                return;
-            }
-            participantGroup = groupVal;
-            lockBackButton();
-            currentStepIndex = 0;
-            renderCurrentStep();
-        }
+            const genderEl = document.querySelector('input[name="gender"]:checked');
 
-        // ── RENDER ────────────────────────────────────────────────────────────────
-        function renderCurrentStep() {
-            clearInterval(timerInterval);
-            container.innerHTML = '';
-            if (currentStepIndex >= experimentSteps.length) {
-                renderSummary();
+            if (!groupVal) {
+                alert('Por favor selecciona el grupo de edad.');
                 return;
             }
-            const step = experimentSteps[currentStepIndex];
-            if (step.type === 'stimulus') renderStimulus(step);
-            else renderQuestion(step);
+            if (!genderEl) {
+                alert('Por favor selecciona el género.');
+                return;
+            }
+
+            participantGroup = groupVal;
+            participantGender = genderEl.value;
+
+            lockBackButton();
+            showStimulus();
         }
 
         // ── ESTÍMULO ──────────────────────────────────────────────────────────────
-        function renderStimulus(step) {
-            const totalMs = step.duration;
+        function showStimulus() {
             let elapsed = 0;
-            const badge = `<div class="phase-badge">${step.label}</div>`;
-            const timerHtml = `<div id="timer-bar-wrap"><div id="timer-bar"></div></div>`;
+            const totalMs = STIMULUS_DURATION;
 
-            if (step.format === 'text') {
-                container.innerHTML = badge + timerHtml + `<div class="stimulus-text">${step.content}</div>`;
-            } else {
-                container.innerHTML = badge + timerHtml +
-                    `<img src="${step.content}" alt="Estímulo visual" class="stimulus-image"
-                     onerror="this.outerHTML='<p style=color:#c62828>⚠ No se encontró <strong>${step.content}</strong>. Ponla en la misma carpeta que el HTML.</p>'">`;
-            }
+            container.innerHTML =
+                `<div class="phase-badge">Observa la imagen</div>
+             <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+             <img src="${STIMULUS_IMAGE}" alt="Estímulo visual" class="stimulus-image"
+                  onerror="this.outerHTML='<p style=color:#c62828>⚠ No se encontró <strong>${STIMULUS_IMAGE}</strong>. Asegúrate de que esté en la misma carpeta que este archivo.</p>'">`;
 
             timerInterval = setInterval(() => {
                 elapsed += 100;
@@ -361,65 +325,81 @@ mi árbol pequeño.
                 if (bar) bar.style.width = pct + '%';
                 if (elapsed >= totalMs) {
                     clearInterval(timerInterval);
-                    currentStepIndex++;
-                    renderCurrentStep();
+                    questionIndex = 0;
+                    showQuestion();
                 }
             }, 100);
         }
 
         // ── PREGUNTA ──────────────────────────────────────────────────────────────
-        function renderQuestion(step) {
-            questionStartTime = performance.now();
-            container.innerHTML = `
-            <div class="question-text">${step.text}</div>
-            <input type="number" id="answer-input" min="0" max="99" autocomplete="off" placeholder="0">
-            <br>
-            <button id="next-btn">Siguiente →</button>
-        `;
-            const input = document.getElementById('answer-input');
-            setTimeout(() => input.focus(), 50);
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') saveAndProceed();
-            });
-            document.getElementById('next-btn').addEventListener('click', saveAndProceed);
+        // Mezcla un array en orden aleatorio (algoritmo Fisher-Yates)
+        function shuffle(arr) {
+            var a = arr.slice();
+            for (var i = a.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+            return a;
         }
 
-        // ── GUARDAR Y AVANZAR ─────────────────────────────────────────────────────
-        function saveAndProceed() {
-            const input = document.getElementById('answer-input');
-            const raw = input.value.trim();
-            if (raw === '') {
-                alert('Por favor ingresa un número antes de continuar.');
+        function showQuestion() {
+            if (questionIndex >= questions.length) {
+                showSummary();
                 return;
             }
 
-            const userAnswer = parseInt(raw, 10);
-            const step = experimentSteps[currentStepIndex];
+            selectedOption = null;
+            questionStartTime = performance.now();
+            const q = questions[questionIndex];
+
+            const optionsHtml = shuffle(q.options).map(op =>
+                `<button class="option-btn" onclick="selectOption(this, '${op}')">${op}</button>`
+            ).join('');
+
+            container.innerHTML =
+                `<div class="phase-badge">Pregunta ${questionIndex + 1} de ${questions.length}</div>
+             <div class="question-text">${q.text}</div>
+             <div class="options-grid">${optionsHtml}</div>
+             <button class="confirm-btn" id="confirm-btn" onclick="confirmAnswer()" disabled>Confirmar →</button>`;
+        }
+
+        function selectOption(btn, value) {
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedOption = value;
+            document.getElementById('confirm-btn').disabled = false;
+        }
+
+        function confirmAnswer() {
+            if (!selectedOption) return;
+
+            const q = questions[questionIndex];
             const timeElapsed = ((performance.now() - questionStartTime) / 1000).toFixed(2);
+            const isCorrect = selectedOption === q.answer;
 
             results.push({
-                grupo: participantGroup,
-                estimulo: step.stimulusLabel,
-                pregunta: step.text,
-                respuesta_usuario: userAnswer,
-                respuesta_correcta: step.answer,
-                es_correcta: userAnswer === step.answer,
-                tiempo_segundos: timeElapsed
+                pregunta: q.text,
+                respuesta_usuario: selectedOption,
+                es_correcta: isCorrect,
+                tiempo_segundos: parseFloat(timeElapsed)
             });
 
-            currentStepIndex++;
-            renderCurrentStep();
+            questionIndex++;
+            showQuestion();
         }
 
         // ── RESUMEN FINAL ─────────────────────────────────────────────────────────
-        async function renderSummary() {
-            const total = results.length;
+        function showSummary() {
+            // Verificaciones de integridad
+
             const correctas = results.filter(r => r.es_correcta).length;
 
-            const rows = results.map(r => {
+            const rows = results.map((r, i) => {
                 const cls = r.es_correcta ? 'correct' : 'incorrect';
                 const txt = r.es_correcta ? 'Sí ✓' : 'No ✗';
-                const q = r.pregunta.length > 60 ? r.pregunta.slice(0, 57) + '…' : r.pregunta;
+                const q = r.pregunta.length > 55 ? r.pregunta.slice(0, 52) + '…' : r.pregunta;
                 return `<tr>
                 <td style="text-align:left">${q}</td>
                 <td>${r.respuesta_usuario}</td>
@@ -428,54 +408,43 @@ mi árbol pequeño.
             </tr>`;
             }).join('');
 
-            container.innerHTML = `
-            <h2>Prueba finalizada</h2>
-            <p>Gracias por tu participación.</p>
-            <p><strong>${correctas} de ${total}</strong> respuestas correctas.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="text-align:left">Pregunta</th>
-                        <th>Tu respuesta</th>
-                        <th>¿Correcta?</th>
-                        <th>Tiempo (s)</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-            <p id="send-status" style="margin-top:16px;font-size:0.9rem;color:#666;">Guardando respuestas…</p>
-        `;
+            container.innerHTML =
+                `<h2>Prueba finalizada</h2>
+             <p>Gracias por tu participación.</p>
+             <p><strong>${correctas} de ${results.length}</strong> respuestas correctas.</p>
+             <table>
+                 <thead>
+                     <tr>
+                         <th style="text-align:left">Pregunta</th>
+                         <th>Tu respuesta</th>
+                         <th>¿Correcta?</th>
+                         <th>Tiempo (s)</th>
+                     </tr>
+                 </thead>
+                 <tbody>${rows}</tbody>
+             </table>
+`;
 
-            // ── ENVÍO ÚNICO A GOOGLE SHEETS ───────────────────────────────────────
+            // Envío único a Google Sheets con todos los datos al finalizar
+            // Timestamp | Grupo | Genero | Rpta_P1 | Rpta_P2 | Rpta_P3 | Rpta_P4 | t1 | t2 | t3 | t4
             const payload = {
-                sessionId,
                 grupo: participantGroup,
+                genero: participantGender,
                 respuestas: results.map(r => r.respuesta_usuario),
                 tiempos: results.map(r => Number(r.tiempo_segundos))
             };
+
             console.log('Enviando a Apps Script:', payload);
-
-            try {
-                if (results.length !== 7) {
-                    throw new Error('La prueba no contiene las 7 respuestas esperadas.');
-                }
-
-                await fetch(APPS_SCRIPT_URL, {
+            fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=UTF-8'
+                    },
                     body: JSON.stringify(payload)
-                });
-                console.log('Petición enviada (no-cors, respuesta opaca)');
-
-                document.getElementById('send-status').textContent =
-                    '✓ Tus respuestas han sido registradas correctamente.';
-                document.getElementById('send-status').style.color = '#2e7d32';
-            } catch (err) {
-                console.error('Error enviando datos:', err);
-                document.getElementById('send-status').textContent =
-                    'No fue posible guardar tus respuestas. Intenta nuevamente.';
-                document.getElementById('send-status').style.color = '#c62828';
-            }
+                })
+                .then(() => console.log('Petición enviada'))
+                .catch(err => console.error('Error enviando datos:', err));
         }
     </script>
 </body>
