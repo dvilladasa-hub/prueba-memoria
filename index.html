@@ -272,6 +272,7 @@
         // Datos del participante
         var participantGroup = '';
         var participantGender = '';
+        var participantGroupLabel = '';
 
         // Acumuladores de resultados (longitud final: 4)
         var results = [];
@@ -302,6 +303,8 @@
 
             participantGroup = groupVal;
             participantGender = genderEl.value;
+            // Guardar el texto del grupo AHORA, mientras el select aún existe en el DOM
+            participantGroupLabel = document.querySelector('#group-select option:checked').text;
 
             lockBackButton();
             showStimulus();
@@ -375,19 +378,27 @@
         function confirmAnswer() {
             if (!selectedOption) return;
 
-            const q = questions[questionIndex];
-            const timeElapsed = ((performance.now() - questionStartTime) / 1000).toFixed(2);
-            const isCorrect = selectedOption === q.answer;
+            var respuesta = selectedOption; // capturar ANTES de nullear
+            selectedOption = null; // bloquea doble ejecución
+
+            var q = questions[questionIndex];
+            var timeElapsed = ((performance.now() - questionStartTime) / 1000).toFixed(2);
+            var isCorrect = respuesta === q.answer;
 
             results.push({
                 pregunta: q.text,
-                respuesta_usuario: selectedOption,
+                respuesta_usuario: respuesta,
                 es_correcta: isCorrect,
                 tiempo_segundos: parseFloat(timeElapsed)
             });
 
             questionIndex++;
-            showQuestion();
+
+            if (questionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showSummary();
+            }
         }
 
         // ── RESUMEN FINAL ─────────────────────────────────────────────────────────
@@ -409,7 +420,7 @@
             }).join('');
 
             var tiempoTotal = results.reduce((a, r) => a + Number(r.tiempo_segundos), 0).toFixed(2);
-            var grupoLabel = document.querySelector('#group-select option:checked').text;
+            var grupoLabel = participantGroupLabel;
             var generoLabel = participantGender;
 
             container.innerHTML =
